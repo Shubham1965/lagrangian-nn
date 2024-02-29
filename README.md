@@ -129,6 +129,22 @@ with open('lnn_double_pendulum.pt', 'rb') as f:
 ### Simulating Trajectories
 
 The code calculates the trajectory of the double pendulum over time using both the baseline and LNN models. It integrates the predicted accelerations to update the pendulum's state across discrete time steps.
+```python
+trajectory_net = np.zeros((trajectory.shape[0], 4))
+trajectory_net[0,:] = trajectory[0,:]
+for i in range(1,len(trajectory)):
+    net_acc = net(torch.tensor(trajectory[i-1,:]).float()).detach().numpy()
+    trajectory_net[i,:] = trajectory[i-1,:] + intODE.dt*np.array([trajectory_net[i-1,0], trajectory_net[i-1,1], net_acc[0], net_acc[1]])
+
+trajectory_lnn = np.zeros((trajectory.shape[0], 4))
+trajectory_lnn[0,:] = trajectory[0,:]
+for i in range(1,len(trajectory)):
+    # print(LN_net.get_parameter(torch.tensor(trajectory[i-1,:], requires_grad=True, dtype=torch.float)))
+    input = torch.tensor(trajectory_lnn[i-1,:], requires_grad=True, dtype=torch.float)
+    lnn_net_acc = LN_net.get_acc(input).detach().numpy()
+    trajectory_lnn[i,:] = trajectory_lnn[i-1,:] + intODE.dt*np.array([trajectory_lnn[i-1,0], trajectory_lnn[i-1,1],lnn_net_acc[0], lnn_net_acc[1]])
+
+```
 
 ### Visualization
 
